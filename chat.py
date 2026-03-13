@@ -6,7 +6,7 @@
  ██║     ██╔══██║██╔══██║   ██║   
  ╚██████╗██║  ██║██║  ██║   ██║   
   ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝  
-  terminal chatbot via openrouter
+  terminal chatbot via groq
 """
 
 import os
@@ -23,7 +23,7 @@ if os.path.exists(_env):
             line = line.strip()
             if line and not line.startswith("#") and "=" in line:
                 k, v = line.split("=", 1)
-                os.environ.setdefault(k.strip(), v.strip())
+                os.environ.setdefault(k.strip(), v.strip().strip("\r"))
 
 # ── ANSI colors ───────────────────────────────────────────────────────────────
 GREEN   = "\033[32m"
@@ -35,9 +35,9 @@ BOLD    = "\033[1m"
 RESET   = "\033[0m"
 
 # ── Config ────────────────────────────────────────────────────────────────────
-API_URL  = "https://openrouter.ai/api/v1/chat/completions"
-MODEL    = os.getenv("CHAT_MODEL", "openrouter/free")
-API_KEY  = os.getenv("OPENROUTER_API_KEY", "")
+API_URL  = "https://api.groq.com/openai/v1/chat/completions"
+MODEL    = os.getenv("CHAT_MODEL", "llama-3.1-8b-instant")
+API_KEY  = os.getenv("GROQ_API_KEY", "")
 
 SYSTEM_PROMPT = os.getenv(
     "CHAT_SYSTEM",
@@ -56,28 +56,27 @@ def help_text():
   /help        show this message
   /clear       clear conversation history
   /model       show current model
-  /models      list some free models
+  /models      list available models
   /quit        exit
 """)
 
 def free_models():
     print(f"""
-{YELLOW}free models on openrouter:{RESET}
-  meta-llama/llama-3.3-8b-instruct:free
-  meta-llama/llama-3.1-8b-instruct:free
-  mistralai/mistral-7b-instruct:free
-  google/gemma-3-4b-it:free
-  microsoft/phi-3-mini-128k-instruct:free
-  deepseek/deepseek-r1:free
+{YELLOW}groq free models:{RESET}
+  llama-3.1-8b-instant     (default, very fast)
+  llama-3.3-70b-versatile  (smarter, still fast)
+  llama-3.1-70b-versatile  (solid all-rounder)
+  mixtral-8x7b-32768       (long context)
+  gemma2-9b-it             (google gemma)
 
-{DIM}set with: export CHAT_MODEL=<model-name>{RESET}
+{DIM}set with CHAT_MODEL=<model-name> in .env{RESET}
 """)
 
 def stream_response(messages: list) -> str:
     """Send request and stream the response token by token."""
     if not API_KEY:
-        print(f"{RED}error: OPENROUTER_API_KEY not set.{RESET}")
-        print(f"{DIM}  export OPENROUTER_API_KEY=your_key_here{RESET}\n")
+        print(f"{RED}error: GROQ_API_KEY not set.{RESET}")
+        print(f"{DIM}  get a free key at console.groq.com{RESET}\n")
         return ""
 
     payload = json.dumps({
@@ -92,8 +91,7 @@ def stream_response(messages: list) -> str:
         headers={
             "Authorization": f"Bearer {API_KEY}",
             "Content-Type": "application/json",
-            "HTTP-Referer": "https://github.com/your-repo/chat",
-            "X-Title": "terminal-chat",
+            "User-Agent": "Mozilla/5.0 (compatible; chat-cli/1.0)",
         },
         method="POST",
     )
@@ -125,7 +123,7 @@ def stream_response(messages: list) -> str:
     except urllib.error.URLError as e:
         print(f"\n{RED}connection error: {e.reason}{RESET}")
 
-    print()  # newline after streamed response
+    print()
     return full_reply
 
 # ── Main loop ─────────────────────────────────────────────────────────────────
@@ -144,7 +142,6 @@ def main():
         if not user_input:
             continue
 
-        # commands
         if user_input.startswith("/"):
             cmd = user_input.lower()
             if cmd in ("/quit", "/exit", "/q"):
