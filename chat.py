@@ -6,7 +6,8 @@
  ██║     ██╔══██║██╔══██║   ██║   
  ╚██████╗██║  ██║██║  ██║   ██║   
   ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝  
-  terminal chatbot via openrouter
+  terminal chatbot via openrouter 
+            (CREATED BY ABDUQODIR RAXMONOV)
 """
 
 import os
