@@ -7,6 +7,8 @@
  ╚██████╗██║  ██║██║  ██║   ██║   
   ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝  
   terminal chatbot via groq
+  
+        (CREATED BY ABDUQODIR RAXMONOV)
 """
 
 import os
